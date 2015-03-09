@@ -33,6 +33,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
@@ -109,6 +110,7 @@ public class ChartZoomManager {
     private final DoubleProperty zoomDurationMillis = new SimpleDoubleProperty( 750.0 );
     private final BooleanProperty zoomAnimated = new SimpleBooleanProperty( true );
     private final BooleanProperty mouseWheelZoomAllowed = new SimpleBooleanProperty( true );
+    private final BooleanProperty touchZoomAllowed = new SimpleBooleanProperty( true );
 
     private static enum ZoomMode { Horizontal, Vertical, Both }
 
@@ -173,6 +175,7 @@ public class ChartZoomManager {
         } );
 
         handlerManager.addEventHandler( false, ScrollEvent.ANY, new MouseWheelZoomHandler() );
+        handlerManager.addEventHandler( false, ZoomEvent.ANY, new TouchZoomHandler() );
     }
 
     /**
@@ -236,6 +239,27 @@ public class ChartZoomManager {
      */
     public void setMouseWheelZoomAllowed( boolean allowed ) {
         mouseWheelZoomAllowed.set( allowed );
+    }
+
+    /**
+     * If true, allow zooming by touch event.
+     */
+    public boolean isTouchZoomAllowed() {
+        return touchZoomAllowed.get();
+    }
+
+    /**
+     * If true, allow zooming by touch event.
+     */
+    public BooleanProperty touchZoomAllowedProperty() {
+        return touchZoomAllowed;
+    }
+
+    /**
+     * If true, allow zooming by touch event.
+     */
+    public void setTouchZoomAllowed( boolean allowed ) {
+        touchZoomAllowed.set( allowed );
     }
 
     /**
@@ -405,81 +429,79 @@ public class ChartZoomManager {
         return (val - min) / (max - min);
     }
 
-    private class MouseWheelZoomHandler implements EventHandler<ScrollEvent> {
+
+    private class AbstractZoomHandler {
+        protected void handle( double eventX, double eventY, double zoomAmount ) {
+            //If we are are doing a zoom animation, stop it. Also of note is that we don't zoom the
+            //mouse wheel zooming. Because the mouse wheel can "fly" and generate a lot of events,
+            //animation doesn't work well. Plus, as the mouse wheel changes the view a small amount in
+            //a predictable way, it "looks like" an animation when you roll it.
+            //We might experiment with mouse wheel zoom animation in the future, though.
+            zoomAnimation.stop();
+
+            //If we wheel zoom on either axis, we restrict zooming to that axis only, else if anywhere
+            //else, including the plot area, zoom both axes.
+            ZoomMode zoomMode;
+            if ( chartInfo.getXAxisArea().contains( eventX, eventY ) ) {
+                zoomMode = ZoomMode.Horizontal;
+            } else if ( chartInfo.getYAxisArea().contains( eventX, eventY ) ) {
+                zoomMode = ZoomMode.Vertical;
+            } else {
+                zoomMode = ZoomMode.Both;
+            }
+
+            //At this point we are a mouse wheel event, based on everything I've read
+            Point2D dataCoords = chartInfo.getDataCoordinates( eventX, eventY );
+
+            //Determine the proportion of change to the lower and upper bounds based on how far the
+            //cursor is along the axis.
+            double xZoomBalance = getBalance( dataCoords.getX(),
+                    xAxis.getLowerBound(), xAxis.getUpperBound() );
+            double yZoomBalance = getBalance( dataCoords.getY(),
+                    yAxis.getLowerBound(), yAxis.getUpperBound() );
+
+            if ( zoomMode == ZoomMode.Both || zoomMode == ZoomMode.Horizontal ) {
+                double xZoomDelta = ( xAxis.getUpperBound() - xAxis.getLowerBound() ) * zoomAmount;
+                xAxis.setAutoRanging( false );
+                xAxis.setLowerBound( xAxis.getLowerBound() - xZoomDelta * xZoomBalance );
+                xAxis.setUpperBound( xAxis.getUpperBound() + xZoomDelta * ( 1 - xZoomBalance ) );
+            }
+
+            if ( zoomMode == ZoomMode.Both || zoomMode == ZoomMode.Vertical ) {
+                double yZoomDelta = ( yAxis.getUpperBound() - yAxis.getLowerBound() ) * zoomAmount;
+                yAxis.setAutoRanging( false );
+                yAxis.setLowerBound( yAxis.getLowerBound() - yZoomDelta * yZoomBalance );
+                yAxis.setUpperBound( yAxis.getUpperBound() + yZoomDelta * ( 1 - yZoomBalance ) );
+            }
+        }
+    }
+
+    private class MouseWheelZoomHandler extends AbstractZoomHandler implements EventHandler<ScrollEvent> {
         private boolean ignoring = false;
 
         @Override
         public void handle( ScrollEvent event ) {
-            EventType<? extends Event> eventType = event.getEventType();
+            EventType<ScrollEvent> eventType = event.getEventType();
             if ( eventType == ScrollEvent.SCROLL_STARTED ) {
-                //mouse wheel events never send SCROLL_STARTED
                 ignoring = true;
             } else if ( eventType == ScrollEvent.SCROLL_FINISHED ) {
-                //end non-mouse wheel event
                 ignoring = false;
-
-            } else if ( eventType == ScrollEvent.SCROLL &&
-                        //If we are allowing mouse wheel zooming
-                        mouseWheelZoomAllowed.get() &&
-                        //If we aren't between SCROLL_STARTED and SCROLL_FINISHED
-                        !ignoring &&
-                        //inertia from non-wheel gestures might have touch count of 0
-                        !event.isInertia() &&
-                        //Only care about vertical wheel events
-                        event.getDeltaY() != 0 &&
-                        //mouse wheel always has touch count of 0
-                        event.getTouchCount() == 0 ) {
-
-                //If we are are doing a zoom animation, stop it. Also of note is that we don't zoom the
-                //mouse wheel zooming. Because the mouse wheel can "fly" and generate a lot of events,
-                //animation doesn't work well. Plus, as the mouse wheel changes the view a small amount in
-                //a predictable way, it "looks like" an animation when you roll it.
-                //We might experiment with mouse wheel zoom animation in the future, though.
-                zoomAnimation.stop();
-
-                //If we wheel zoom on either axis, we restrict zooming to that axis only, else if anywhere
-                //else, including the plot area, zoom both axes.
-                ZoomMode zoomMode;
-                double eventX = event.getX();
-                double eventY = event.getY();
-                if ( chartInfo.getXAxisArea().contains( eventX, eventY ) ) {
-                    zoomMode = ZoomMode.Horizontal;
-                } else if ( chartInfo.getYAxisArea().contains( eventX, eventY ) ) {
-                    zoomMode = ZoomMode.Vertical;
-                } else {
-                    zoomMode = ZoomMode.Both;
-                }
-
-                //At this point we are a mouse wheel event, based on everything I've read
-                Point2D dataCoords = chartInfo.getDataCoordinates( eventX, eventY );
-
-                //Determine the proportion of change to the lower and upper bounds based on how far the
-                //cursor is along the axis.
-                double xZoomBalance = getBalance( dataCoords.getX(),
-                                                  xAxis.getLowerBound(), xAxis.getUpperBound() );
-                double yZoomBalance = getBalance( dataCoords.getY(),
-                                                  yAxis.getLowerBound(), yAxis.getUpperBound() );
-
-                //Are we zooming in or out, based on the direction of the roll
+            } else if ( eventType == ScrollEvent.SCROLL && shouldScrollEventBeHandled( event ) ) {
                 double direction = -Math.signum( event.getDeltaY() );
+                handle( event.getX(), event.getY(), direction * 0.1 );
+            }
+        }
 
-                //TODO: Do we need to handle "continuous" scroll wheels that don't work based on ticks?
-                //If so, the 0.2 needs to be modified
-                double zoomAmount = 0.2 * direction;
+        private boolean shouldScrollEventBeHandled( ScrollEvent event ) {
+            return mouseWheelZoomAllowed.get() && !ignoring && event.getDeltaY() != 0 && event.getTouchCount() == 0;
+        }
+    }
 
-                if ( zoomMode == ZoomMode.Both || zoomMode == ZoomMode.Horizontal ) {
-                    double xZoomDelta = ( xAxis.getUpperBound() - xAxis.getLowerBound() ) * zoomAmount;
-                    xAxis.setAutoRanging( false );
-                    xAxis.setLowerBound( xAxis.getLowerBound() - xZoomDelta * xZoomBalance );
-                    xAxis.setUpperBound( xAxis.getUpperBound() + xZoomDelta * ( 1 - xZoomBalance ) );
-                }
-
-                if ( zoomMode == ZoomMode.Both || zoomMode == ZoomMode.Vertical ) {
-                    double yZoomDelta = ( yAxis.getUpperBound() - yAxis.getLowerBound() ) * zoomAmount;
-                    yAxis.setAutoRanging( false );
-                    yAxis.setLowerBound( yAxis.getLowerBound() - yZoomDelta * yZoomBalance );
-                    yAxis.setUpperBound( yAxis.getUpperBound() + yZoomDelta * ( 1 - yZoomBalance ) );
-                }
+    private class TouchZoomHandler extends AbstractZoomHandler implements EventHandler<ZoomEvent> {
+        @Override
+        public void handle(ZoomEvent event) {
+            if ( event.getEventType() == ZoomEvent.ZOOM && touchZoomAllowed.get() ) {
+                handle( event.getX(), event.getY(), event.getZoomFactor() - 1.0);
             }
         }
     }
