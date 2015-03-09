@@ -21,7 +21,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.east301.jfsutils-touch</groupId>
+    <groupId>net.east301.jfxutils-touch</groupId>
     <artifactId>jfxutils-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
