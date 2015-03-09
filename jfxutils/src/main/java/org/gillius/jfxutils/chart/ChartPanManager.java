@@ -30,133 +30,133 @@ import org.gillius.jfxutils.EventHandlerManager;
  * @author Jason Winnebeck
  */
 public class ChartPanManager {
-	/**
-	 * The default mouse filter for the {@link ChartPanManager} filters events unless only primary
-	 * mouse button (usually left) is depressed.
-	 */
-	public static final EventHandler<MouseEvent> DEFAULT_FILTER = ChartZoomManager.DEFAULT_FILTER;
+    /**
+     * The default mouse filter for the {@link ChartPanManager} filters events unless only primary
+     * mouse button (usually left) is depressed.
+     */
+    public static final EventHandler<MouseEvent> DEFAULT_FILTER = ChartZoomManager.DEFAULT_FILTER;
 
-	private final EventHandlerManager handlerManager;
+    private final EventHandlerManager handlerManager;
 
-	private final ValueAxis<?> xAxis;
-	private final ValueAxis<?> yAxis;
+    private final ValueAxis<?> xAxis;
+    private final ValueAxis<?> yAxis;
 
-	private EventHandler<? super MouseEvent> mouseFilter = DEFAULT_FILTER;
+    private EventHandler<? super MouseEvent> mouseFilter = DEFAULT_FILTER;
 
-	private boolean dragging = false;
+    private boolean dragging = false;
 
-	private boolean wasXAnimated;
-	private boolean wasYAnimated;
+    private boolean wasXAnimated;
+    private boolean wasYAnimated;
 
-	private double lastX;
-	private double lastY;
+    private double lastX;
+    private double lastY;
 
-	public ChartPanManager( XYChart<?, ?> chart ) {
-		handlerManager = new EventHandlerManager( chart );
-		xAxis = (ValueAxis<?>) chart.getXAxis();
-		yAxis = (ValueAxis<?>) chart.getYAxis();
+    public ChartPanManager( XYChart<?, ?> chart ) {
+        handlerManager = new EventHandlerManager( chart );
+        xAxis = (ValueAxis<?>) chart.getXAxis();
+        yAxis = (ValueAxis<?>) chart.getYAxis();
 
-		handlerManager.addEventHandler( false, MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				if ( passesFilter( mouseEvent ) )
-					startDrag( mouseEvent );
-			}
-		} );
+        handlerManager.addEventHandler( false, MouseEvent.DRAG_DETECTED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                if ( passesFilter( mouseEvent ) )
+                    startDrag( mouseEvent );
+            }
+        } );
 
-		handlerManager.addEventHandler( false, MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				drag( mouseEvent );
-			}
-		} );
+        handlerManager.addEventHandler( false, MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                drag( mouseEvent );
+            }
+        } );
 
-		handlerManager.addEventHandler( false, MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				release();
-			}
-		} );
-	}
+        handlerManager.addEventHandler( false, MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                release();
+            }
+        } );
+    }
 
-	/**
-	 * Returns the mouse filter.
-	 *
-	 * @see #setMouseFilter(EventHandler)
-	 */
-	public EventHandler<? super MouseEvent> getMouseFilter() {
-		return mouseFilter;
-	}
+    /**
+     * Returns the mouse filter.
+     *
+     * @see #setMouseFilter(EventHandler)
+     */
+    public EventHandler<? super MouseEvent> getMouseFilter() {
+        return mouseFilter;
+    }
 
-	/**
-	 * Sets the mouse filter for starting the pan action. If the filter consumes the event with
-	 * {@link Event#consume()}, then the event is ignored. If the filter is null, all events are
-	 * passed through. The default filter is {@link #DEFAULT_FILTER}.
-	 */
-	public void setMouseFilter( EventHandler<? super MouseEvent> mouseFilter ) {
-		this.mouseFilter = mouseFilter;
-	}
+    /**
+     * Sets the mouse filter for starting the pan action. If the filter consumes the event with
+     * {@link Event#consume()}, then the event is ignored. If the filter is null, all events are
+     * passed through. The default filter is {@link #DEFAULT_FILTER}.
+     */
+    public void setMouseFilter( EventHandler<? super MouseEvent> mouseFilter ) {
+        this.mouseFilter = mouseFilter;
+    }
 
-	public void start() {
-		handlerManager.addAllHandlers();
-	}
+    public void start() {
+        handlerManager.addAllHandlers();
+    }
 
-	public void stop() {
-		handlerManager.removeAllHandlers();
-		release();
-	}
+    public void stop() {
+        handlerManager.removeAllHandlers();
+        release();
+    }
 
-	private boolean passesFilter( MouseEvent event ) {
-		if ( mouseFilter != null ) {
-			MouseEvent cloned = (MouseEvent) event.clone();
-			mouseFilter.handle( cloned );
-			if ( cloned.isConsumed() )
-				return false;
-		}
+    private boolean passesFilter( MouseEvent event ) {
+        if ( mouseFilter != null ) {
+            MouseEvent cloned = (MouseEvent) event.clone();
+            mouseFilter.handle( cloned );
+            if ( cloned.isConsumed() )
+                return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	private void startDrag( MouseEvent event ) {
-		lastX = event.getX();
-		lastY = event.getY();
+    private void startDrag( MouseEvent event ) {
+        lastX = event.getX();
+        lastY = event.getY();
 
-		wasXAnimated = xAxis.getAnimated();
-		wasYAnimated = yAxis.getAnimated();
+        wasXAnimated = xAxis.getAnimated();
+        wasYAnimated = yAxis.getAnimated();
 
-		xAxis.setAnimated( false );
-		xAxis.setAutoRanging( false );
-		yAxis.setAnimated( false );
-		yAxis.setAutoRanging( false );
+        xAxis.setAnimated( false );
+        xAxis.setAutoRanging( false );
+        yAxis.setAnimated( false );
+        yAxis.setAutoRanging( false );
 
-		dragging = true;
-	}
+        dragging = true;
+    }
 
-	private void drag( MouseEvent event ) {
-		if ( !dragging )
-			return;
+    private void drag( MouseEvent event ) {
+        if ( !dragging )
+            return;
 
-		double dX = ( event.getX() - lastX ) / -xAxis.getScale();
-		double dY = ( event.getY() - lastY ) / -yAxis.getScale();
-		lastX = event.getX();
-		lastY = event.getY();
+        double dX = ( event.getX() - lastX ) / -xAxis.getScale();
+        double dY = ( event.getY() - lastY ) / -yAxis.getScale();
+        lastX = event.getX();
+        lastY = event.getY();
 
-		xAxis.setAutoRanging( false );
-		xAxis.setLowerBound( xAxis.getLowerBound() + dX );
-		xAxis.setUpperBound( xAxis.getUpperBound() + dX );
+        xAxis.setAutoRanging( false );
+        xAxis.setLowerBound( xAxis.getLowerBound() + dX );
+        xAxis.setUpperBound( xAxis.getUpperBound() + dX );
 
-		yAxis.setAutoRanging( false );
-		yAxis.setLowerBound( yAxis.getLowerBound() + dY );
-		yAxis.setUpperBound( yAxis.getUpperBound() + dY );
-	}
+        yAxis.setAutoRanging( false );
+        yAxis.setLowerBound( yAxis.getLowerBound() + dY );
+        yAxis.setUpperBound( yAxis.getUpperBound() + dY );
+    }
 
-	private void release() {
-		if ( !dragging )
-			return;
+    private void release() {
+        if ( !dragging )
+            return;
 
-		dragging = false;
+        dragging = false;
 
-		xAxis.setAnimated( wasXAnimated );
-		yAxis.setAnimated( wasYAnimated );
-	}
+        xAxis.setAnimated( wasXAnimated );
+        yAxis.setAnimated( wasYAnimated );
+    }
 }

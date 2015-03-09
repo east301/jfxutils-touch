@@ -26,28 +26,28 @@ import static org.junit.Assert.*;
  * @author Jason Winnebeck
  */
 public class TestStableTicksAxis {
-	@Test
-	public void testCalculateTickSpacing() {
-		assertEquals( 1.0, StableTicksAxis.calculateTickSpacing( 3.0, 5 ), 0.0001 );
-		assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 9.0, 5 ), 0.0001 );
-		assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 10.0, 5 ), 0.0001 );
-		assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 11.0, 5 ), 0.0001 );
-		assertEquals( 5.0, StableTicksAxis.calculateTickSpacing( 14.0, 5 ), 0.0001 );
+    @Test
+    public void testCalculateTickSpacing() {
+        assertEquals( 1.0, StableTicksAxis.calculateTickSpacing( 3.0, 5 ), 0.0001 );
+        assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 9.0, 5 ), 0.0001 );
+        assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 10.0, 5 ), 0.0001 );
+        assertEquals( 2.5, StableTicksAxis.calculateTickSpacing( 11.0, 5 ), 0.0001 );
+        assertEquals( 5.0, StableTicksAxis.calculateTickSpacing( 14.0, 5 ), 0.0001 );
 
-		assertEquals( 10.0, StableTicksAxis.calculateTickSpacing( 50.0, 5 ), 0.0001 );
+        assertEquals( 10.0, StableTicksAxis.calculateTickSpacing( 50.0, 5 ), 0.0001 );
 
-		assertEquals( 0.5, StableTicksAxis.calculateTickSpacing( 2.5, 5 ), 0.0001 );
+        assertEquals( 0.5, StableTicksAxis.calculateTickSpacing( 2.5, 5 ), 0.0001 );
 
-		assertEquals( 0.5 * 10000, StableTicksAxis.calculateTickSpacing( 2.5 * 10000, 5 ), 0.0001 );
-	}
+        assertEquals( 0.5 * 10000, StableTicksAxis.calculateTickSpacing( 2.5 * 10000, 5 ), 0.0001 );
+    }
 
-	@Test
-	public void testCalculateTickSpacingHuge() {
-		assertEquals( 5e10, StableTicksAxis.calculateTickSpacing( 23e10, 5 ), 0.0001e10 );
-	}
+    @Test
+    public void testCalculateTickSpacingHuge() {
+        assertEquals( 5e10, StableTicksAxis.calculateTickSpacing( 23e10, 5 ), 0.0001e10 );
+    }
 
-	@Test
-	public void testCalculateTickSpacingTiny() {
-		assertEquals( 5e-10, StableTicksAxis.calculateTickSpacing( 23e-10, 5 ), 0.001e-10 );
-	}
+    @Test
+    public void testCalculateTickSpacingTiny() {
+        assertEquals( 5e-10, StableTicksAxis.calculateTickSpacing( 23e-10, 5 ), 0.001e-10 );
+    }
 }

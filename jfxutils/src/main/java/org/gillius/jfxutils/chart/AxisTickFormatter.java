@@ -26,19 +26,19 @@ import javafx.scene.chart.ValueAxis;
  * @author Jason Winnebeck
  */
 public interface AxisTickFormatter {
-	/**
-	 * Sets the range of formatting. Some formatters use this to determine labels based on the scale of the range, i.e.
-	 * picking 1,000,000 versus 1e6 or "January 2103" when a range is months wide versus "04:30" when a range is minutes
-	 * wide.
-	 *
-	 * @param low         low value of the axis
-	 * @param high        high value of the axis
-	 * @param tickSpacing distance between each tick
-	 */
-	public void setRange( double low, double high, double tickSpacing );
+    /**
+     * Sets the range of formatting. Some formatters use this to determine labels based on the scale of the range, i.e.
+     * picking 1,000,000 versus 1e6 or "January 2103" when a range is months wide versus "04:30" when a range is minutes
+     * wide.
+     *
+     * @param low         low value of the axis
+     * @param high        high value of the axis
+     * @param tickSpacing distance between each tick
+     */
+    public void setRange( double low, double high, double tickSpacing );
 
-	/**
-	 * Given a number on the axis at a tick point, return a label.
-	 */
-	public String format( Number value );
+    /**
+     * Given a number on the axis at a tick point, return a label.
+     */
+    public String format( Number value );
 }

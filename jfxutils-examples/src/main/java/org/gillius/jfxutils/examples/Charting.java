@@ -47,147 +47,147 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 public class Charting extends Application {
-	public static void main( String[] args ) {
-		launch( args );
-	}
+    public static void main( String[] args ) {
+        launch( args );
+    }
 
-	@FXML
-	private LineChart<Number, Number> chart;
+    @FXML
+    private LineChart<Number, Number> chart;
 
-	@FXML
-	private Slider valueSlider;
+    @FXML
+    private Slider valueSlider;
 
-	@FXML
-	private Label outputLabel;
+    @FXML
+    private Label outputLabel;
 
-	private XYChart.Series<Number, Number> series;
+    private XYChart.Series<Number, Number> series;
 
-	private long startTime;
+    private long startTime;
 
-	private Timeline addDataTimeline;
+    private Timeline addDataTimeline;
 
-	@FXML
-	void addSample() {
-		series.getData().add( new XYChart.Data<Number, Number>( System.currentTimeMillis() - startTime,
-		                                                        valueSlider.getValue() ) );
-	}
+    @FXML
+    void addSample() {
+        series.getData().add( new XYChart.Data<Number, Number>( System.currentTimeMillis() - startTime,
+                                                                valueSlider.getValue() ) );
+    }
 
-	@FXML
-	void autoZoom() {
-		chart.getXAxis().setAutoRanging( true );
-		chart.getYAxis().setAutoRanging( true );
-		//There seems to be some bug, even with the default NumberAxis, that simply setting the
-		//auto ranging does not recompute the ranges. So we clear all chart data then re-add it.
-		//Hopefully I find a more proper way for this, unless it's really bug, in which case I hope
-		//it gets fixed.
-		ObservableList<XYChart.Series<Number,Number>> data = chart.getData();
-		chart.setData( FXCollections.<XYChart.Series<Number, Number>>emptyObservableList() );
-		chart.setData( data );
-	}
+    @FXML
+    void autoZoom() {
+        chart.getXAxis().setAutoRanging( true );
+        chart.getYAxis().setAutoRanging( true );
+        //There seems to be some bug, even with the default NumberAxis, that simply setting the
+        //auto ranging does not recompute the ranges. So we clear all chart data then re-add it.
+        //Hopefully I find a more proper way for this, unless it's really bug, in which case I hope
+        //it gets fixed.
+        ObservableList<XYChart.Series<Number,Number>> data = chart.getData();
+        chart.setData( FXCollections.<XYChart.Series<Number, Number>>emptyObservableList() );
+        chart.setData( data );
+    }
 
-	@FXML
-	void toggleAdd() {
-		switch ( addDataTimeline.getStatus() ) {
-			case PAUSED:
-			case STOPPED:
-				addDataTimeline.play();
-				chart.getXAxis().setAutoRanging( true );
-				chart.getYAxis().setAutoRanging( true );
-				//Animation looks horrible if we're updating a lot
-				chart.setAnimated( false );
-				chart.getXAxis().setAnimated( false );
-				chart.getYAxis().setAnimated( false );
-				break;
-			case RUNNING:
-				addDataTimeline.stop();
-				//Return the animation since we're not updating a lot
-				chart.setAnimated( true );
-				chart.getXAxis().setAnimated( true );
-				chart.getYAxis().setAnimated( true );
-				break;
+    @FXML
+    void toggleAdd() {
+        switch ( addDataTimeline.getStatus() ) {
+            case PAUSED:
+            case STOPPED:
+                addDataTimeline.play();
+                chart.getXAxis().setAutoRanging( true );
+                chart.getYAxis().setAutoRanging( true );
+                //Animation looks horrible if we're updating a lot
+                chart.setAnimated( false );
+                chart.getXAxis().setAnimated( false );
+                chart.getYAxis().setAnimated( false );
+                break;
+            case RUNNING:
+                addDataTimeline.stop();
+                //Return the animation since we're not updating a lot
+                chart.setAnimated( true );
+                chart.getXAxis().setAnimated( true );
+                chart.getYAxis().setAnimated( true );
+                break;
 
-			default:
-				throw new AssertionError( "Unknown status" );
-		}
-	}
+            default:
+                throw new AssertionError( "Unknown status" );
+        }
+    }
 
-	@Override
-	public void start( Stage stage ) throws Exception {
-		FXMLLoader loader = new FXMLLoader( getClass().getResource( "Charting.fxml" ) );
-		Region contentRootRegion = (Region) loader.load();
+    @Override
+    public void start( Stage stage ) throws Exception {
+        FXMLLoader loader = new FXMLLoader( getClass().getResource( "Charting.fxml" ) );
+        Region contentRootRegion = (Region) loader.load();
 
-		StackPane root = JFXUtil.createScalePane( contentRootRegion, 960, 540, false );
-		Scene scene = new Scene( root, root.getPrefWidth(), root.getPrefHeight() );
-		stage.setScene( scene );
-		stage.setTitle( "Charting Example" );
-		stage.show();
-	}
+        StackPane root = JFXUtil.createScalePane( contentRootRegion, 960, 540, false );
+        Scene scene = new Scene( root, root.getPrefWidth(), root.getPrefHeight() );
+        stage.setScene( scene );
+        stage.setTitle( "Charting Example" );
+        stage.show();
+    }
 
-	@FXML
-	void initialize() {
-		startTime = System.currentTimeMillis();
+    @FXML
+    void initialize() {
+        startTime = System.currentTimeMillis();
 
-		//Set chart to format dates on the X axis
-		SimpleDateFormat format = new SimpleDateFormat( "HH:mm:ss" );
-		format.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
-		((StableTicksAxis) chart.getXAxis()).setAxisTickFormatter(
-				new FixedFormatTickFormatter( format ) );
+        //Set chart to format dates on the X axis
+        SimpleDateFormat format = new SimpleDateFormat( "HH:mm:ss" );
+        format.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
+        ((StableTicksAxis) chart.getXAxis()).setAxisTickFormatter(
+                new FixedFormatTickFormatter( format ) );
 
-		series = new XYChart.Series<Number, Number>();
-		series.setName( "Data" );
+        series = new XYChart.Series<Number, Number>();
+        series.setName( "Data" );
 
-		chart.getData().add( series );
+        chart.getData().add( series );
 
-		addDataTimeline = new Timeline( new KeyFrame(
-				Duration.millis( 250 ),
-				new EventHandler<ActionEvent>() {
-					@Override
-					public void handle( ActionEvent actionEvent ) {
-						addSample();
-					}
-				}
-		));
-		addDataTimeline.setCycleCount( Animation.INDEFINITE );
+        addDataTimeline = new Timeline( new KeyFrame(
+                Duration.millis( 250 ),
+                new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle( ActionEvent actionEvent ) {
+                        addSample();
+                    }
+                }
+        ));
+        addDataTimeline.setCycleCount( Animation.INDEFINITE );
 
-		chart.setOnMouseMoved( new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				double xStart = chart.getXAxis().getLocalToParentTransform().getTx();
-				double axisXRelativeMousePosition = mouseEvent.getX() - xStart;
-				outputLabel.setText( String.format(
-						"%d, %d (%d, %d); %d - %d",
-						(int) mouseEvent.getSceneX(), (int) mouseEvent.getSceneY(),
-						(int) mouseEvent.getX(), (int) mouseEvent.getY(),
-						(int) xStart,
-						chart.getXAxis().getValueForDisplay( axisXRelativeMousePosition ).intValue()
-				) );
-			}
-		} );
+        chart.setOnMouseMoved( new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                double xStart = chart.getXAxis().getLocalToParentTransform().getTx();
+                double axisXRelativeMousePosition = mouseEvent.getX() - xStart;
+                outputLabel.setText( String.format(
+                        "%d, %d (%d, %d); %d - %d",
+                        (int) mouseEvent.getSceneX(), (int) mouseEvent.getSceneY(),
+                        (int) mouseEvent.getX(), (int) mouseEvent.getY(),
+                        (int) xStart,
+                        chart.getXAxis().getValueForDisplay( axisXRelativeMousePosition ).intValue()
+                ) );
+            }
+        } );
 
-		//Panning works via either secondary (right) mouse or primary with ctrl held down
-		ChartPanManager panner = new ChartPanManager( chart );
-		panner.setMouseFilter( new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				if ( mouseEvent.getButton() == MouseButton.SECONDARY ||
-						 ( mouseEvent.getButton() == MouseButton.PRIMARY &&
-						   mouseEvent.isShortcutDown() ) ) {
-					//let it through
-				} else {
-					mouseEvent.consume();
-				}
-			}
-		} );
-		panner.start();
+        //Panning works via either secondary (right) mouse or primary with ctrl held down
+        ChartPanManager panner = new ChartPanManager( chart );
+        panner.setMouseFilter( new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                if ( mouseEvent.getButton() == MouseButton.SECONDARY ||
+                         ( mouseEvent.getButton() == MouseButton.PRIMARY &&
+                           mouseEvent.isShortcutDown() ) ) {
+                    //let it through
+                } else {
+                    mouseEvent.consume();
+                }
+            }
+        } );
+        panner.start();
 
-		//Zooming works only via primary mouse button without ctrl held down
-		JFXChartUtil.setupZooming( chart, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle( MouseEvent mouseEvent ) {
-				if ( mouseEvent.getButton() != MouseButton.PRIMARY ||
-				     mouseEvent.isShortcutDown() )
-					mouseEvent.consume();
-			}
-		} );
-	}
+        //Zooming works only via primary mouse button without ctrl held down
+        JFXChartUtil.setupZooming( chart, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle( MouseEvent mouseEvent ) {
+                if ( mouseEvent.getButton() != MouseButton.PRIMARY ||
+                     mouseEvent.isShortcutDown() )
+                    mouseEvent.consume();
+            }
+        } );
+    }
 }

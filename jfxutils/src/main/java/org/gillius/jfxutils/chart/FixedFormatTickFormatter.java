@@ -24,18 +24,18 @@ import java.text.Format;
  * @author Jason Winnebeck
  */
 public class FixedFormatTickFormatter implements AxisTickFormatter {
-	private final Format format;
+    private final Format format;
 
-	public FixedFormatTickFormatter( Format format ) {
-		this.format = format;
-	}
+    public FixedFormatTickFormatter( Format format ) {
+        this.format = format;
+    }
 
-	@Override
-	public void setRange( double low, double high, double tickSpacing ) {
-	}
+    @Override
+    public void setRange( double low, double high, double tickSpacing ) {
+    }
 
-	@Override
-	public String format( Number value ) {
-		return format.format( value );
-	}
+    @Override
+    public String format( Number value ) {
+        return format.format( value );
+    }
 }
