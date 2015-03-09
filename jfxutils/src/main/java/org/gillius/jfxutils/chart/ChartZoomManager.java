@@ -481,12 +481,7 @@ public class ChartZoomManager {
 
         @Override
         public void handle( ScrollEvent event ) {
-            EventType<ScrollEvent> eventType = event.getEventType();
-            if ( eventType == ScrollEvent.SCROLL_STARTED ) {
-                ignoring = true;
-            } else if ( eventType == ScrollEvent.SCROLL_FINISHED ) {
-                ignoring = false;
-            } else if ( eventType == ScrollEvent.SCROLL && shouldScrollEventBeHandled( event ) ) {
+            if ( event.getEventType() == ScrollEvent.SCROLL && mouseWheelZoomAllowed.get() ) {
                 double direction = -Math.signum( event.getDeltaY() );
                 handle( event.getX(), event.getY(), direction * 0.1 );
             }
