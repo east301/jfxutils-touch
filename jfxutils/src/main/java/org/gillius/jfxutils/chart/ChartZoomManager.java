@@ -501,7 +501,7 @@ public class ChartZoomManager {
         @Override
         public void handle(ZoomEvent event) {
             if ( event.getEventType() == ZoomEvent.ZOOM && touchZoomAllowed.get() ) {
-                handle( event.getX(), event.getY(), event.getZoomFactor() - 1.0);
+                handle( event.getX(), event.getY(), 1.0 - event.getZoomFactor());
             }
         }
     }
